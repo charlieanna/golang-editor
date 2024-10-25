@@ -36,3 +36,40 @@
     transform: rotate(360deg);
   }
 }
+
+.editor-wrapper {
+  width: 800px; /* Ensure fixed width */
+  height: 400px; /* Ensure fixed height */
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Ensure no global styles affect the Monaco Editor */
+.monaco-editor, .monaco-editor-background, .monaco-editor .view-lines {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.monaco-editor .view-lines {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Prevent any unnecessary scrolling or extra wide text */
+.monaco-scrollable-element {
+  overflow: hidden !important;
+}
+
+/* Ensure proper line height and font settings */
+.monaco-editor {
+  font-size: 14px !important;
+  font-family: "monospace" !important;
+  line-height: 1.5 !important;
+}
