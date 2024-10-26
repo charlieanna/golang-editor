@@ -35,7 +35,10 @@ const GolangEditor = () => {
         theme="vs-dark"
         value={code}
         options={{
-          selectOnLineNumbers: true,
+          fontSize: 14,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
         }}
         onChange={handleCodeChange}
       />

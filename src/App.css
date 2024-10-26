@@ -1,75 +1,12 @@
 .App {
   text-align: center;
+  padding: 20px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+button {
+  margin-top: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.editor-wrapper {
-  width: 800px; /* Ensure fixed width */
-  height: 400px; /* Ensure fixed height */
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-/* Ensure no global styles affect the Monaco Editor */
-.monaco-editor, .monaco-editor-background, .monaco-editor .view-lines {
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.monaco-editor .view-lines {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
-/* Prevent any unnecessary scrolling or extra wide text */
-.monaco-scrollable-element {
-  overflow: hidden !important;
-}
-
-/* Ensure proper line height and font settings */
 .monaco-editor {
-  font-size: 14px !important;
-  font-family: "monospace" !important;
-  line-height: 1.5 !important;
+  border: 1px solid #ccc;
 }

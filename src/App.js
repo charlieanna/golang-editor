@@ -1,5 +1,4 @@
 import React from 'react';
-import './App.css';
 import GolangEditor from './GolangEditor';
 
 function App() {
