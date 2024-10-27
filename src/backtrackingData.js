@@ -23,16 +23,33 @@ def generate_subsets(nums):\n    results = []\n\n    def helper(current, start):
   ];
   
   
-  export const treeDataFull = {
+  // Full tree showing all subsets (results at leaves)
+export const treeDataFull = {
     name: '[]',
     children: [
-      { name: '[1]', children: [{ name: '[1, 2]', children: [{ name: '[1, 2, 3]' }] }] },
-      { name: '[2]', children: [{ name: '[2, 3]' }] },
+      {
+        name: '[1]',
+        children: [
+          {
+            name: '[1, 2]',
+            children: [{ name: '[1, 2, 3]' }],
+          },
+          {
+            name: '[1, 3]',  // Adding [1,3] subset
+          },
+        ],
+      },
+      {
+        name: '[2]',
+        children: [{ name: '[2, 3]' }],
+      },
       { name: '[3]' },
     ],
   };
   
-  export const treeDataSteps = [
+  
+// Tree data for each step
+export const treeDataSteps = [
     {
       name: 'results = []',
       children: [],
@@ -50,12 +67,6 @@ def generate_subsets(nums):\n    results = []\n\n    def helper(current, start):
       ],
     },
     {
-      name: 'Explain arguments',
-      children: [
-        { name: 'current: current subset', children: [{ name: 'start: starting index' }] },
-      ],
-    },
-    {
       name: 'Backtracking logic',
       children: [
         {
@@ -70,7 +81,11 @@ def generate_subsets(nums):\n    results = []\n\n    def helper(current, start):
         {
           name: '[]',
           children: [
-            { name: '[1]', children: [{ name: '[1, 2]', children: [{ name: '[1, 2, 3]' }] }] },
+            { name: '[1]', children: [
+                { name: '[1, 2]', children: [{ name: '[1, 2, 3]' }] },
+                { name: '[1, 3]' },  // Adding [1,3] here as well
+              ],
+            },
             { name: '[2]', children: [{ name: '[2, 3]' }] },
             { name: '[3]' },
           ],
@@ -78,4 +93,5 @@ def generate_subsets(nums):\n    results = []\n\n    def helper(current, start):
       ],
     },
   ];
+  
   
