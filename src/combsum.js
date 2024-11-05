@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MonacoEditor from 'react-monaco-editor';
+import axios from 'axios';
 
 const CombinationSumInteractiveExercise = () => {
   const [step, setStep] = useState(0);
@@ -8,7 +9,7 @@ const CombinationSumInteractiveExercise = () => {
   const [feedback, setFeedback] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Initialize the first step when component loads
+  // Initialize code and the first step
   useEffect(() => {
     setCode(stepSnippets[0]);
   }, []);
@@ -25,37 +26,50 @@ def combination_sum(candidates, target):\n    results = []\n\n    def helper(cur
 def combination_sum(candidates, target):\n    results = []\n\n    def helper(current, start, total):\n        if total == target:\n            results.append(current[:])\n        elif total > target:\n            return\n        else:\n            for i in range(start, len(candidates)):\n                current.append(candidates[i])\n                helper(current, i, total + candidates[i])\n                current.pop()\n    helper([], 0, 0)\n\n    return results`,
   ];
 
+  // Expected output for each step
+  const expectedOutputs = [
+    "[]", // Step 1: Empty result array
+    "[]", // Step 2: Empty result, helper not yet implemented
+    "[]", // Step 3: Helper logic, but no valid combinations yet
+    "[[2, 2, 3], [7]]", // Step 4: Full solution implemented
+  ];
+
   // Instructions for each step
   const instructions = [
     "Step 1: Initialize the `results` array to store the valid combinations and return it.",
     "Step 2: Define the helper function `helper(current, start, total)` to track current combination, start index, and total sum.",
     "Step 3: Implement logic inside `helper` to check if total equals target and if so, append current combination to results.",
-    "Step 4: Complete the function by adding the call to `helper([], 0, 0)` from the main function and return results."
+    "Step 4: Complete the function by adding the call to `helper([], 0, 0)` from the main function and return results.",
   ];
 
-  // Expected results for validation at each step
-  const expectedSubmissions = [
-    `def combination_sum(candidates, target):\n    results = []\n    return results`,
-    `def combination_sum(candidates, target):\n    results = []\n\n    def helper(current, start, total):\n        pass\n    return results`,
-    `def combination_sum(candidates, target):\n    results = []\n\n    def helper(current, start, total):\n        if total == target:\n            results.append(current[:])\n        elif total > target:\n            return\n        else:\n            for i in range(start, len(candidates)):\n                current.append(candidates[i])\n                helper(current, i, total + candidates[i])\n                current.pop()\n    return results`,
-  ];
+  // Function to check code output by sending it to the backend
+  const handleCheckSubmission = async () => {
+    try {
+      const response = await axios.post('http://localhost:8080/execute', {
+        language: 'python',
+        code: code,
+      });
 
-  // Move to the next step if user input is correct
+      const actualOutput = response.data.output.trim();
+      const expectedOutput = expectedOutputs[step].trim();
+
+      if (actualOutput === expectedOutput) {
+        setFeedback('Correct! Proceed to the next step.');
+      } else {
+        setFeedback(`Incorrect. Expected output: ${expectedOutput}, but got: ${actualOutput}`);
+      }
+    } catch (error) {
+      console.error('Error running code:', error);
+      setFeedback('Error executing code. Please try again.');
+    }
+  };
+
+  // Move to the next step if output is correct
   const handleNextStep = () => {
     if (step < instructions.length - 1) {
       setStep(step + 1);
       setCode(stepSnippets[step + 1]);
       setFeedback('');
-    }
-  };
-
-  // Check user's submission
-  const handleCheckSubmission = () => {
-    console.log(code.trim(), "\n", expectedSubmissions[step].trim())
-    if (code.trim() === expectedSubmissions[step].trim()) {
-      setFeedback('Correct! Proceed to the next step.');
-    } else {
-      setFeedback('Incorrect. Please try again.');
     }
   };
 
@@ -71,21 +85,6 @@ def combination_sum(candidates, target):\n    results = []\n\n    def helper(cur
   // Handle code changes in the Monaco editor
   const handleCodeChange = (newCode) => {
     setCode(newCode);
-  };
-
-  // Handle running the code
-  const handleRunCode = async () => {
-    try {
-      const response = await fetch('http://localhost:8080/execute', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language: 'python', code }),
-      });
-      const data = await response.json();
-      setOutput(data.output);
-    } catch (error) {
-      setErrorMessage('Error executing code');
-    }
   };
 
   return (
@@ -135,7 +134,6 @@ def combination_sum(candidates, target):\n    results = []\n\n    def helper(cur
           Next
         </button>
       )}
-      <button onClick={handleRunCode}>Run Code</button>
 
       {/* Output Section */}
       <h2>Output:</h2>
