@@ -59,6 +59,7 @@ const LearningObjectivesEditor = () => {
         objective,
         question: initialQuestions[objective],
         answer,
+        userId: 'user123',
       });
       setAnswers((prev) => ({ ...prev, [objective]: answer }));
       alert("Answer submitted successfully!"); // Notify the user of successful submission
