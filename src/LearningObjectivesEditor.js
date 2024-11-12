@@ -6,6 +6,9 @@ const LearningObjectivesEditor = () => {
   const [learningObjectives, setLearningObjectives] = useState([]);
   const [initialQuestions, setInitialQuestions] = useState({});
   const [answers, setAnswers] = useState({});
+  const [feedback, setFeedback] = useState({});
+  const [nextQuestions, setNextQuestions] = useState({});
+  const [summary, setSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // API call to get learning objectives
@@ -55,14 +58,21 @@ const LearningObjectivesEditor = () => {
     e.preventDefault();
     const answer = e.target.answer.value;
     try {
-      await axios.post('http://localhost:8080/submit-response', {
+      const response = await axios.post('http://localhost:8080/submit-response', {
         objective,
         question: initialQuestions[objective],
         answer,
         userId: 'user123',
       });
+
+      // Extract response data
+      const { feedback, nextQuestion, summary } = response.data;
+
+      // Update state with the answer and backend response data
       setAnswers((prev) => ({ ...prev, [objective]: answer }));
-      alert("Answer submitted successfully!"); // Notify the user of successful submission
+      setFeedback((prev) => ({ ...prev, [objective]: feedback }));
+      setNextQuestions((prev) => ({ ...prev, [objective]: nextQuestion }));
+      setSummary(summary);
     } catch (error) {
       console.error('Error submitting answer:', error);
       alert("Failed to submit the answer."); // Notify the user in case of an error
@@ -109,8 +119,9 @@ const LearningObjectivesEditor = () => {
               )}
               {answers[objective] && (
                 <div>
-                  <p>Your Answer:</p>
-                  <p>{answers[objective]}</p>
+                  <p>Your Answer: {answers[objective]}</p>
+                  <p>Feedback: {feedback[objective]}</p>
+                  <p>Next Question: {nextQuestions[objective]}</p>
                 </div>
               )}
             </li>
@@ -126,6 +137,14 @@ const LearningObjectivesEditor = () => {
       >
         {isLoading ? 'Loading learning objectives...' : 'Get Learning Objectives'}
       </button>
+
+      {/* Summary */}
+      {summary && (
+        <section style={{ marginTop: '20px' }}>
+          <h2>Summary</h2>
+          <p>{summary}</p>
+        </section>
+      )}
     </div>
   );
 };
