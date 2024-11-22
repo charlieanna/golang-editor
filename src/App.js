@@ -4,6 +4,7 @@ import GolangEditor from './GolangEditor'; // Existing Golang editor component
 import WorkerPoolEditor from './WorkerPoolEditor'; // New Worker Pool exercise component
 import BacktrackingProblemTree from './BacktrackingProblemTree';
 import CombinationSum from './combsum'
+import LearningObjectivesEditor from './LearningObjectivesEditor'; // New Learning Objectives exercise component
 function App() {
   return (
     <Router>
@@ -12,7 +13,8 @@ function App() {
           <Route path="/" element={<GolangEditor />} />
           <Route path="/workerpool" element={<WorkerPoolEditor />} />
           <Route path="/backtrackingproblemtree" element={<BacktrackingProblemTree />} />  
-          <Route path="/combsum" element={< CombinationSum/>} />           
+          <Route path="/combsum" element={< CombinationSum/>} />       
+          <Route path="/objectives" element={<LearningObjectivesEditor />} />    
         </Routes>
       </div>
     </Router>
