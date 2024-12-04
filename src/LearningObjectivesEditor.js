@@ -1,87 +1,140 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const LearningObjectivesEditor = () => {
+const TextFetcher = () => {
   const [articleContent, setArticleContent] = useState('');
-  const [learningObjectives, setLearningObjectives] = useState([]);
-  const [initialQuestions, setInitialQuestions] = useState({});
-  const [answers, setAnswers] = useState({});
-  const [feedback, setFeedback] = useState({});
-  const [nextQuestions, setNextQuestions] = useState({});
-  const [summary, setSummary] = useState('');
+  const [fetchedText, setFetchedText] = useState('');
+  const [parsedQuestion, setParsedQuestion] = useState(null);
+  const [selectedOption, setSelectedOption] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // API call to get learning objectives
-  const getLearningObjectives = async () => {
+  // Function to parse the fetched text
+  const parseFetchedText = (text) => {
+    try {
+      const questionMatch = text.match(/Question:\s*(.*?)\s*Options:/s);
+      const optionsMatch = text.match(/Options:\s*(.*?)\s*Correct Answer:/s);
+      const correctAnswerMatch = text.match(/Correct Answer:\s*(.*?)\s*Explanation:/s);
+      const explanationMatch = text.match(/Explanation:\s*(.*)/s);
+
+      if (
+        !questionMatch ||
+        !optionsMatch ||
+        !correctAnswerMatch ||
+        !explanationMatch
+      ) {
+        throw new Error('Invalid text format');
+      }
+
+      const question = questionMatch[1].trim();
+      const optionsText = optionsMatch[1].trim();
+      const correctAnswerText = correctAnswerMatch[1].trim();
+      const explanation = explanationMatch[1].trim();
+
+      // Parse options into an array
+      const optionRegex = /([a-d])\)\s*([^a-d]+)/gi;
+      let match;
+      const options = [];
+      while ((match = optionRegex.exec(optionsText)) !== null) {
+        options.push({
+          label: match[1],
+          text: match[2].trim(),
+        });
+      }
+
+      // Extract the correct answer label
+      const correctAnswerLabel = correctAnswerText.charAt(0).toLowerCase();
+      const correctOption = options.find(
+        (option) => option.label === correctAnswerLabel
+      );
+
+      if (!correctOption) {
+        throw new Error('Correct answer not found among options');
+      }
+
+      return {
+        question,
+        options,
+        correctAnswer: correctOption,
+        explanation,
+      };
+    } catch (err) {
+      console.error('Error parsing fetched text:', err);
+      setError('Failed to parse the fetched text. Please check the format.');
+      return null;
+    }
+  };
+
+  // API call to get the text
+  const getText = async () => {
     setIsLoading(true);
+    setError(null);
+    setIsSubmitted(false);
+    setSelectedOption('');
+    setParsedQuestion(null);
     try {
       const response = await axios.get('http://localhost:8080/get-learning-objectives', {
         params: { articleContent },
       });
-      setLearningObjectives(response.data.learning_objectives || []);
-    } catch (error) {
-      console.error('Error getting learning objectives:', error);
+      const text = response.data.text || 'No text found.';
+      const parsed = parseFetchedText(text);
+      if (parsed) {
+        setParsedQuestion(parsed);
+      }
+    } catch (err) {
+      console.error('Error fetching text:', err);
+      setError('Failed to fetch the text. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // API call to get initial question
-  const getInitialQuestion = async (objective) => {
-    try {
-      const response = await axios.get('http://localhost:8080/get-question', {
-        params: { objective },
-      });
-      setInitialQuestions((prev) => ({ ...prev, [objective]: response.data.question }));
-    } catch (error) {
-      console.error('Error getting initial question:', error);
-    }
-  };
-
-  // Handle button click to get learning objectives
+  // Handle button click to get the text
   const handleButtonClick = () => {
-    getLearningObjectives();
+    getText();
   };
 
-  // Handle text box change
+  // Handle text area change
   const handleArticleContentChange = (e) => {
     setArticleContent(e.target.value);
   };
 
-  // Handle get initial question button click
-  const handleGetInitialQuestionClick = (objective) => {
-    getInitialQuestion(objective);
+  // Handle option change
+  const handleOptionChange = (e) => {
+    setSelectedOption(e.target.value);
   };
 
-  // Handle answer submission and send answer to backend
-  const handleAnswerSubmission = async (e, objective) => {
+  // Handle form submission
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const answer = e.target.answer.value;
-    try {
-      const response = await axios.post('http://localhost:8080/submit-response', {
-        objective,
-        question: initialQuestions[objective],
-        answer,
-        userId: 'user123',
-      });
+    if (!selectedOption || !parsedQuestion) return;
 
-      // Extract response data
-      const { feedback, nextQuestion, summary } = response.data;
+    const isAnswerCorrect =
+      selectedOption.toLowerCase() === parsedQuestion.correctAnswer.label;
+    setIsCorrect(isAnswerCorrect);
+    setIsSubmitted(true);
+  };
 
-      // Update state with the answer and backend response data
-      setAnswers((prev) => ({ ...prev, [objective]: answer }));
-      setFeedback((prev) => ({ ...prev, [objective]: feedback }));
-      setNextQuestions((prev) => ({ ...prev, [objective]: nextQuestion }));
-      setSummary(summary);
-    } catch (error) {
-      console.error('Error submitting answer:', error);
-      alert("Failed to submit the answer."); // Notify the user in case of an error
+  // Function to get option styles based on submission and correctness
+  const getOptionStyle = (option) => {
+    if (!isSubmitted) return {};
+
+    if (option.label === parsedQuestion.correctAnswer.label) {
+      return { backgroundColor: '#d4edda' }; // Green for correct answer
     }
+
+    if (option.label === selectedOption && option.label !== parsedQuestion.correctAnswer.label) {
+      return { backgroundColor: '#f8d7da' }; // Red for incorrect selection
+    }
+
+    return {};
   };
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Learning Objectives</h1>
+      <h1>Text Fetcher</h1>
 
       {/* Article Content Text Box */}
       <section style={{ marginBottom: '20px' }}>
@@ -91,62 +144,117 @@ const LearningObjectivesEditor = () => {
           onChange={handleArticleContentChange}
           rows="10"
           cols="50"
-          style={{ width: '100%', padding: '10px' }}
+          style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+          placeholder="Paste your article content here..."
         />
       </section>
 
-      {/* Learning Objectives */}
-      <section>
-        <h2>Learning Objectives:</h2>
-        <ul>
-          {learningObjectives.map((objective, index) => (
-            <li key={index}>
-              {objective}
-              <button
-                onClick={() => handleGetInitialQuestionClick(objective)}
-                style={{ padding: '5px 10px', cursor: 'pointer' }}
-              >
-                Get Initial Question
-              </button>
-              {initialQuestions[objective] && (
-                <div>
-                  <p>Initial Question: {initialQuestions[objective]}</p>
-                  <form onSubmit={(e) => handleAnswerSubmission(e, objective)}>
-                    <input type="text" name="answer" placeholder="Enter your answer" />
-                    <button type="submit">Submit Answer</button>
-                  </form>
-                </div>
-              )}
-              {answers[objective] && (
-                <div>
-                  <p>Your Answer: {answers[objective]}</p>
-                  <p>Feedback: {feedback[objective]}</p>
-                  <p>Next Question: {nextQuestions[objective]}</p>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Button to get learning objectives */}
+      {/* Button to get the text */}
       <button
         onClick={handleButtonClick}
-        style={{ padding: '10px 20px', cursor: 'pointer' }}
-        disabled={isLoading}
+        style={{
+          padding: '10px 20px',
+          cursor: 'pointer',
+          fontSize: '16px',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+        }}
+        disabled={isLoading || !articleContent.trim()}
       >
-        {isLoading ? 'Loading learning objectives...' : 'Get Learning Objectives'}
+        {isLoading ? 'Fetching text...' : 'Get Text'}
       </button>
 
-      {/* Summary */}
-      {summary && (
+      {/* Display Error if any */}
+      {error && (
+        <div style={{ marginTop: '20px', color: 'red' }}>
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Display Fetched Text (For Debugging Purposes) */}
+      {fetchedText && (
         <section style={{ marginTop: '20px' }}>
-          <h2>Summary</h2>
-          <p>{summary}</p>
+          <h2>Fetched Text:</h2>
+          <p>{fetchedText}</p>
+        </section>
+      )}
+
+      {/* Display Parsed Question */}
+      {parsedQuestion && (
+        <section style={{ marginTop: '20px' }}>
+          <form onSubmit={handleSubmit}>
+            <h2>Question:</h2>
+            <p>{parsedQuestion.question}</p>
+
+            <h3>Options:</h3>
+            {parsedQuestion.options.map((option) => (
+              <div
+                key={option.label}
+                style={{
+                  marginBottom: '10px',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  ...getOptionStyle(option),
+                }}
+              >
+                <label style={{ cursor: 'pointer' }}>
+                  <input
+                    type="radio"
+                    name="option"
+                    value={option.label}
+                    checked={selectedOption === option.label}
+                    onChange={handleOptionChange}
+                    required
+                    style={{ marginRight: '10px' }}
+                  />
+                  <strong>{option.label.toUpperCase()})</strong> {option.text}
+                </label>
+              </div>
+            ))}
+
+            <button
+              type="submit"
+              style={{
+                padding: '8px 16px',
+                cursor: 'pointer',
+                marginTop: '10px',
+                fontSize: '16px',
+                backgroundColor: '#28a745',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+              }}
+              disabled={!selectedOption}
+            >
+              Submit Answer
+            </button>
+          </form>
+
+          {/* Display Feedback */}
+          {isSubmitted && (
+            <div style={{ marginTop: '20px' }}>
+              <h3 style={{ color: isCorrect ? '#28a745' : '#dc3545' }}>
+                {isCorrect ? 'Correct!' : 'Incorrect.'}
+              </h3>
+              {!isCorrect && (
+                <p>
+                  You selected <strong>{selectedOption.toUpperCase()})</strong>.
+                </p>
+              )}
+              <p>
+                <strong>Correct Answer:</strong> {parsedQuestion.correctAnswer.label.toUpperCase()}) {parsedQuestion.correctAnswer.text}
+              </p>
+              <p>
+                <strong>Explanation:</strong> {parsedQuestion.explanation}
+              </p>
+            </div>
+          )}
         </section>
       )}
     </div>
   );
 };
 
-export default LearningObjectivesEditor;
+export default TextFetcher;
