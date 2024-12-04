@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+// app/javascript/components/TextFetcher.jsx
+
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const TextFetcher = () => {
-  const [articleContent, setArticleContent] = useState('');
   const [fetchedText, setFetchedText] = useState('');
   const [parsedQuestion, setParsedQuestion] = useState(null);
   const [selectedOption, setSelectedOption] = useState('');
@@ -33,19 +34,17 @@ const TextFetcher = () => {
       const correctAnswerText = correctAnswerMatch[1].trim();
       const explanation = explanationMatch[1].trim();
 
-      console.log(optionsText)
+      // Improved regex for options
+      const optionRegex = /\s*([a-dA-D])\)\s*([\s\S]*?)(?=\s*[a-dA-D]\)|$)/g;
+      let match;
+      const options = [];
 
-     // Improved regex for options
-     const optionRegex = /\s*([a-dA-D])\)\s*([\s\S]*?)(?=\s*[a-dA-D]\)|$)/g;
-     let match;
-     const options = [];
+      while ((match = optionRegex.exec(optionsText)) !== null) {
+        const label = match[1].toLowerCase();
+        const text = match[2].trim();
+        options.push({ label, text });
+      }
 
-     while ((match = optionRegex.exec(optionsText)) !== null) {
-       const label = match[1].toLowerCase();
-       const text = match[2].trim();
-       options.push({ label, text });
-     }
-      
       // Extract the correct answer label
       const correctAnswerLabel = correctAnswerText.charAt(0).toLowerCase();
       const correctOption = options.find(
@@ -69,8 +68,14 @@ const TextFetcher = () => {
     }
   };
 
+  // Function to get the 'articleContent' parameter from the URL
+  const getArticleContentFromURL = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('articleContent') || '';
+  };
+
   // API call to get the text
-  const getText = async () => {
+  const getText = async (articleContent) => {
     setIsLoading(true);
     setError(null);
     setIsSubmitted(false);
@@ -78,7 +83,7 @@ const TextFetcher = () => {
     setParsedQuestion(null);
     try {
       const response = await axios.get('http://localhost:8080/get-learning-objectives', {
-        params: { articleContent },
+        params: { articleContent }, // Changed from 'question' to 'articleContent'
       });
       const text = response.data.text || 'No text found.';
       const parsed = parseFetchedText(text);
@@ -93,15 +98,15 @@ const TextFetcher = () => {
     }
   };
 
-  // Handle button click to get the text
-  const handleButtonClick = () => {
-    getText();
-  };
-
-  // Handle text area change
-  const handleArticleContentChange = (e) => {
-    setArticleContent(e.target.value);
-  };
+  // Fetch objectives on component mount
+  useEffect(() => {
+    const articleContent = getArticleContentFromURL();
+    if (articleContent) {
+      getText(articleContent);
+    } else {
+      setError('No article content provided.');
+    }
+  }, []);
 
   // Handle option change
   const handleOptionChange = (e) => {
@@ -136,37 +141,14 @@ const TextFetcher = () => {
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>Text Fetcher</h1>
+      <h1>Learning Objectives</h1>
 
-      {/* Article Content Text Box */}
-      <section style={{ marginBottom: '20px' }}>
-        <h2>Enter Article Content:</h2>
-        <textarea
-          value={articleContent}
-          onChange={handleArticleContentChange}
-          rows="10"
-          cols="50"
-          style={{ width: '100%', padding: '10px', fontSize: '16px' }}
-          placeholder="Paste your article content here..."
-        />
-      </section>
-
-      {/* Button to get the text */}
-      <button
-        onClick={handleButtonClick}
-        style={{
-          padding: '10px 20px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          backgroundColor: '#007bff',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-        }}
-        disabled={isLoading || !articleContent.trim()}
-      >
-        {isLoading ? 'Fetching text...' : 'Get Text'}
-      </button>
+      {/* Display Loading Indicator */}
+      {isLoading && (
+        <div style={{ marginTop: '20px' }}>
+          <p>Loading learning objectives...</p>
+        </div>
+      )}
 
       {/* Display Error if any */}
       {error && (
@@ -175,7 +157,7 @@ const TextFetcher = () => {
         </div>
       )}
 
-      {/* Display Fetched Text (For Debugging Purposes) */}
+      {/* Display Fetched Text (Optional) */}
       {fetchedText && (
         <section style={{ marginTop: '20px' }}>
           <h2>Fetched Text:</h2>
