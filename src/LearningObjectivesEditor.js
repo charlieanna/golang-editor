@@ -33,17 +33,19 @@ const TextFetcher = () => {
       const correctAnswerText = correctAnswerMatch[1].trim();
       const explanation = explanationMatch[1].trim();
 
-      // Parse options into an array
-      const optionRegex = /([a-d])\)\s*([^a-d]+)/gi;
-      let match;
-      const options = [];
-      while ((match = optionRegex.exec(optionsText)) !== null) {
-        options.push({
-          label: match[1],
-          text: match[2].trim(),
-        });
-      }
+      console.log(optionsText)
 
+     // Improved regex for options
+     const optionRegex = /\s*([a-dA-D])\)\s*([\s\S]*?)(?=\s*[a-dA-D]\)|$)/g;
+     let match;
+     const options = [];
+
+     while ((match = optionRegex.exec(optionsText)) !== null) {
+       const label = match[1].toLowerCase();
+       const text = match[2].trim();
+       options.push({ label, text });
+     }
+      
       // Extract the correct answer label
       const correctAnswerLabel = correctAnswerText.charAt(0).toLowerCase();
       const correctOption = options.find(
