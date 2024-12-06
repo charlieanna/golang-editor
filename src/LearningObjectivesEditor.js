@@ -1,16 +1,15 @@
-// app/javascript/components/TextFetcher.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const TextFetcher = () => {
-  const [fetchedText, setFetchedText] = useState('');
   const [parsedQuestion, setParsedQuestion] = useState(null);
   const [selectedOption, setSelectedOption] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const hasFetched = useRef(false); // Ref to track API call
 
   // Function to parse the fetched text
   const parseFetchedText = (text) => {
@@ -83,7 +82,7 @@ const TextFetcher = () => {
     setParsedQuestion(null);
     try {
       const response = await axios.get('http://localhost:8080/get-learning-objectives', {
-        params: { articleContent }, // Changed from 'question' to 'articleContent'
+        params: { articleContent },
       });
       const text = response.data.text || 'No text found.';
       const parsed = parseFetchedText(text);
@@ -100,6 +99,9 @@ const TextFetcher = () => {
 
   // Fetch objectives on component mount
   useEffect(() => {
+    if (hasFetched.current) return; // Prevent duplicate calls
+    hasFetched.current = true;
+
     const articleContent = getArticleContentFromURL();
     if (articleContent) {
       getText(articleContent);
@@ -155,14 +157,6 @@ const TextFetcher = () => {
         <div style={{ marginTop: '20px', color: 'red' }}>
           <p>{error}</p>
         </div>
-      )}
-
-      {/* Display Fetched Text (Optional) */}
-      {fetchedText && (
-        <section style={{ marginTop: '20px' }}>
-          <h2>Fetched Text:</h2>
-          <p>{fetchedText}</p>
-        </section>
       )}
 
       {/* Display Parsed Question */}
