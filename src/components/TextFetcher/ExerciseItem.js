@@ -1,7 +1,14 @@
 // src/components/TextFetcher/ExerciseItem.js
+
 import React, { useState, useEffect } from 'react';
 import CodeEditorComponent from './CodeEditorComponent';
 import { executeCode } from '../../services/api';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import golang from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
+import github from 'react-syntax-highlighter/dist/esm/styles/hljs/github';
+
+// Register the Go language for syntax highlighting
+SyntaxHighlighter.registerLanguage('go', golang);
 
 /**
  * ExerciseItem Component
@@ -9,28 +16,33 @@ import { executeCode } from '../../services/api';
  * @param {Object} props - Component props.
  */
 const ExerciseItem = ({ exercise, onCompletion }) => {
-  const [code, setCode] = useState(exercise.initialCode.trim());
+  // State variables
+  const [code, setCode] = useState(exercise.code_template.trim());
   const [output, setOutput] = useState('');
-  const [hint, setHint] = useState('');
+  const [hintIndex, setHintIndex] = useState(0); // Tracks the current hint to display
+  const [displayedHints, setDisplayedHints] = useState([]); // Stores hints shown to the user
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState(null);
+  const [showSolution, setShowSolution] = useState(false); // Controls the display of the full solution
 
-  // Add useEffect to reset state when 'exercise' prop changes
+  // Reset state when a new exercise is received
   useEffect(() => {
     setCode(exercise.code_template.trim());
     setOutput('');
-    setHint('');
+    setHintIndex(0);
+    setDisplayedHints([]);
     setIsSubmitted(false);
     setIsCorrect(false);
     setIsRunning(false);
     setError(null);
+    setShowSolution(false);
   }, [exercise]);
 
   /**
    * Handles changes in the code editor.
-   * @param {string} newinitialCodeCode - The updated code from the editor.
+   * @param {string} newCode - The updated code from the editor.
    */
   const handleCodeChange = (newCode) => {
     console.log('Code updated:', newCode);
@@ -61,10 +73,9 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    */
   const handleSubmit = () => {
     console.log('Submitted:');
-    console.log(!output)
-    console.log(isSubmitted)
-    // For simplicity, we'll assume that the presence of expected output indicates correctness.
-    // In a real-world scenario, you'd have more robust evaluation.
+    console.log(!output);
+    console.log(isSubmitted);
+    // Evaluate correctness
     if (exercise.expectedOutput) {
       const expected = exercise.expectedOutput.trim();
       const actual = output.trim();
@@ -81,11 +92,17 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
   };
 
   /**
-   * Handles displaying the hint for the current exercise.
+   * Handles displaying the next hint or the full solution.
    */
-  const handleHint = () => {
-    console.log('Hint requested:', exercise.hints);
-    setHint(exercise.hints);
+  const handleShowHint = () => {
+    if (hintIndex < exercise.hints.length) {
+      // Show the next hint
+      setDisplayedHints([...displayedHints, exercise.hints[hintIndex]]);
+      setHintIndex(hintIndex + 1);
+    } else if (hintIndex === exercise.hints.length) {
+      // All hints have been shown; now display the full solution
+      setShowSolution(true);
+    }
   };
 
   return (
@@ -106,73 +123,132 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
       <p>
         <strong>Instructions:</strong> {exercise.instructions}
       </p>
-     
-      {/* Monaco Editor */}
+
+      {/* Code Editor */}
       <CodeEditorComponent code={code} onChange={handleCodeChange} />
 
       <br />
 
       {/* Buttons */}
-      <button
-        onClick={handleRunCode}
-        disabled={isRunning}
-        style={{
-          padding: '8px 16px',
-          cursor: 'pointer',
-          marginRight: '10px',
-          fontSize: '16px',
-          backgroundColor: '#17a2b8',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-        }}
-      >
-        {isRunning ? 'Running...' : 'Run Code'}
-      </button>
-      <button
-        onClick={handleSubmit}
-        // disabled={!output || isSubmitted}
-        style={{
-          padding: '8px 16px',
-          cursor: 'pointer',
-          marginRight: '10px',
-          fontSize: '16px',
-          backgroundColor: '#28a745',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '4px',
-        }}
-      >
-        Submit
-      </button>
-      <button
-        onClick={handleHint}
-        disabled={hint}
-        style={{
-          padding: '8px 16px',
-          cursor: 'pointer',
-          fontSize: '16px',
-          backgroundColor: '#ffc107',
-          color: '#212529',
-          border: 'none',
-          borderRadius: '4px',
-        }}
-      >
-        Show Hint
-      </button>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        <button
+          onClick={handleRunCode}
+          disabled={isRunning}
+          style={{
+            padding: '8px 16px',
+            cursor: isRunning ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            backgroundColor: '#17a2b8',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            flex: '1 1 auto',
+          }}
+          aria-label="Run code"
+        >
+          {isRunning ? 'Running...' : 'Run Code'}
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={!output || isSubmitted}
+          style={{
+            padding: '8px 16px',
+            cursor: !output || isSubmitted ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            backgroundColor: '#28a745',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            flex: '1 1 auto',
+          }}
+          aria-label="Submit solution"
+        >
+          Submit
+        </button>
+        <button
+          onClick={handleShowHint}
+          disabled={hintIndex > exercise.hints.length}
+          style={{
+            padding: '8px 16px',
+            cursor: hintIndex > exercise.hints.length ? 'not-allowed' : 'pointer',
+            fontSize: '16px',
+            backgroundColor: '#ffc107',
+            color: '#212529',
+            border: 'none',
+            borderRadius: '4px',
+            flex: '1 1 auto',
+          }}
+          aria-label={hintIndex < exercise.hints.length ? 'Show next hint' : 'Show solution'}
+        >
+          {hintIndex < exercise.hints.length ? 'Show Hint' : 'Show Solution'}
+        </button>
+      </div>
 
-      {/* Hint */}
-      {hint && (
-        <div style={{ marginTop: '20px', backgroundColor: '#fff3cd', padding: '10px', borderRadius: '4px' }}>
-          <strong>Hint:</strong> {hint}
+      {/* Hints */}
+      {displayedHints.length > 0 && (
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#fff3cd',
+            padding: '10px',
+            borderRadius: '4px',
+          }}
+        >
+          <strong>Hints:</strong>
+          <ul>
+            {displayedHints.map((hint, index) => (
+              <li key={index}>{hint}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Full Solution */}
+      {showSolution && exercise.solution_explanation && (
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#d1ecf1',
+            padding: '10px',
+            borderRadius: '4px',
+          }}
+        >
+          <strong>Solution Explanation:</strong>
+          <p>{exercise.solution_explanation}</p>
+          
+          <strong>Solution Code:</strong>
+          <SyntaxHighlighter language="go" style={github}>
+            {exercise.solution_code}
+          </SyntaxHighlighter>
         </div>
       )}
 
       {/* Output */}
       {output && (
-        <div style={{ marginTop: '20px', backgroundColor: '#e2e3e5', padding: '10px', borderRadius: '4px' }}>
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#e2e3e5',
+            padding: '10px',
+            borderRadius: '4px',
+          }}
+        >
           <strong>Output:</strong>
           <pre>{output}</pre>
+        </div>
+      )}
+
+      {/* Error Handling */}
+      {error && (
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#f8d7da',
+            padding: '10px',
+            borderRadius: '4px',
+          }}
+        >
+          <strong>Error:</strong> {error}
         </div>
       )}
 
@@ -187,7 +263,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
           }}
         >
           <h3 style={{ color: isCorrect ? '#155724' : '#721c24' }}>
-            {isCorrect ? 'Correct!' : 'Incorrect.'}
+            {isCorrect ? '✅ Correct!' : '❌ Incorrect.'}
           </h3>
           {!isCorrect && exercise.expectedOutput && (
             <p>
