@@ -1,6 +1,5 @@
 // src/components/TextFetcher/ExerciseItem.js
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CodeEditorComponent from './CodeEditorComponent';
 import { executeCode } from '../../services/api';
 
@@ -17,6 +16,17 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
   const [isCorrect, setIsCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState(null);
+
+  // Add useEffect to reset state when 'exercise' prop changes
+  useEffect(() => {
+    setCode(exercise.code_template.trim());
+    setOutput('');
+    setHint('');
+    setIsSubmitted(false);
+    setIsCorrect(false);
+    setIsRunning(false);
+    setError(null);
+  }, [exercise]);
 
   /**
    * Handles changes in the code editor.
@@ -51,6 +61,8 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    */
   const handleSubmit = () => {
     console.log('Submitted:');
+    console.log(!output)
+    console.log(isSubmitted)
     // For simplicity, we'll assume that the presence of expected output indicates correctness.
     // In a real-world scenario, you'd have more robust evaluation.
     if (exercise.expectedOutput) {
