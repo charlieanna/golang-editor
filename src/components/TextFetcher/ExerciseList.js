@@ -21,9 +21,12 @@ const ExerciseList = ({ exercises }) => {
    * @param {number} exerciseId - The ID of the completed exercise.
    */
   const handleExerciseCompletion = (exerciseId) => {
+    console.log(`Exercise ${exerciseId} completed!`);
     if (currentExerciseIndex < exercises.length - 1) {
+      console.log('Moving to the next exercise...');
       setCurrentExerciseIndex(currentExerciseIndex + 1);
     } else {
+      console.log('All exercises completed!');
       setIsCompleted(true);
     }
   };
