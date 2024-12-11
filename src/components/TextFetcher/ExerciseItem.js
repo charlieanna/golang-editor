@@ -85,9 +85,12 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
         {exercise.difficulty} Level: {exercise.title}
       </h2>
       <p>
-        <strong>Problem:</strong> {exercise.question}
+        <strong>Problem:</strong> {exercise.problem_statement}
       </p>
-
+      <p>
+        <strong>Instructions:</strong> {exercise.instructions}
+      </p>
+     
       {/* Monaco Editor */}
       <CodeEditorComponent code={code} onChange={handleCodeChange} />
 
