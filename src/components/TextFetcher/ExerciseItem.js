@@ -119,7 +119,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
       </button>
       <button
         onClick={handleSubmit}
-        disabled={!output || isSubmitted}
+        // disabled={!output || isSubmitted}
         style={{
           padding: '8px 16px',
           cursor: 'pointer',
