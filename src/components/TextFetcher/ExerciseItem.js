@@ -84,8 +84,8 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    * Handles displaying the hint for the current exercise.
    */
   const handleHint = () => {
-    console.log('Hint requested:', exercise);
-    setHint(exercise.hint);
+    console.log('Hint requested:', exercise.hints);
+    setHint(exercise.hints);
   };
 
   return (
