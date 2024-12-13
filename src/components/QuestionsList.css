@@ -1,0 +1,25 @@
+/* src/components/QuestionsList.css */
+
+.questions-list {
+  padding: 20px;
+}
+
+.questions-list h2 {
+  margin-bottom: 20px;
+}
+
+.questions-list ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.questions-list li {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.questions-list li h3 {
+  margin: 0 0 10px 0;
+}

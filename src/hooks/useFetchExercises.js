@@ -1,28 +1,29 @@
 // src/hooks/useFetchExercises.js
 
 import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { fetchExercises } from '../services/api';
 
 /**
- * Custom hook to fetch exercises based on article content.
- * @param {string} articleContent - The content of the article to generate exercises from.
+ * Custom hook to fetch exercises based on site and question ID extracted from the URL.
  * @returns {Object} - An object containing exercises, loading state, and error information.
  */
-const useFetchExercises = (articleContent) => {
+const useFetchExercises = () => {
+  const { site, question_id } = useParams(); // Extract 'site' and 'question_id' from the URL
   const [exercises, setExercises] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const hasFetched = useRef(false); // To prevent duplicate fetches
 
   useEffect(() => {
-    if (hasFetched.current) return; // Prevent duplicate calls
+    if (hasFetched.current || !site || !question_id) return;
     hasFetched.current = true;
 
     const getExercisesData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const fetchedExercises = await fetchExercises(articleContent);
+        const fetchedExercises = await fetchExercises(site, question_id);
         if (fetchedExercises.length === 0) {
           setError('No exercises found.');
           return;
@@ -35,12 +36,8 @@ const useFetchExercises = (articleContent) => {
       }
     };
 
-    if (articleContent) {
-      getExercisesData();
-    } else {
-      setError('No article content provided.');
-    }
-  }, [articleContent]);
+    getExercisesData();
+  }, [site, question_id]);
 
   return { exercises, isLoading, error };
 };

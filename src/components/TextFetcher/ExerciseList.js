@@ -11,8 +11,6 @@ import ExerciseItem from './ExerciseItem';
  */
 const ExerciseList = ({ exercises }) => {
   // Inside ExerciseList.js or wherever exercises are received
-  console.log('Fetched Exercises:', exercises);
-
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0); // Tracks the current exercise
   const [isCompleted, setIsCompleted] = useState(false); // Tracks if all exercises are completed
 
@@ -21,12 +19,9 @@ const ExerciseList = ({ exercises }) => {
    * @param {number} exerciseId - The ID of the completed exercise.
    */
   const handleExerciseCompletion = (exerciseId) => {
-    console.log(`Exercise ${exerciseId} completed!`);
     if (currentExerciseIndex < exercises.length - 1) {
-      console.log('Moving to the next exercise...');
       setCurrentExerciseIndex(currentExerciseIndex + 1);
     } else {
-      console.log('All exercises completed!');
       setIsCompleted(true);
     }
   };

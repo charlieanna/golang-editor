@@ -45,7 +45,6 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    * @param {string} newCode - The updated code from the editor.
    */
   const handleCodeChange = (newCode) => {
-    console.log('Code updated:', newCode);
     setCode(newCode);
   };
 
@@ -53,7 +52,6 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    * Handles the execution of user-submitted code.
    */
   const handleRunCode = async () => {
-    console.log('Running code:', code);
     setIsRunning(true);
     setError(null);
     setOutput('');
@@ -72,9 +70,6 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    * Evaluates whether the output matches expected criteria.
    */
   const handleSubmit = () => {
-    console.log('Submitted:');
-    console.log(!output);
-    console.log(isSubmitted);
     // Evaluate correctness
     if (exercise.expectedOutput) {
       const expected = exercise.expectedOutput.trim();
