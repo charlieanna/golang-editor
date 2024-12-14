@@ -107,6 +107,8 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
         padding: '20px',
         border: '1px solid #ccc',
         borderRadius: '8px',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+        backgroundColor: '#fff',
       }}
     >
       <h2>
@@ -138,8 +140,15 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             border: 'none',
             borderRadius: '4px',
             flex: '1 1 auto',
+            transition: 'background-color 0.3s',
           }}
           aria-label="Run code"
+          onMouseOver={(e) => {
+            if (!isRunning) e.currentTarget.style.backgroundColor = '#138496';
+          }}
+          onMouseOut={(e) => {
+            if (!isRunning) e.currentTarget.style.backgroundColor = '#17a2b8';
+          }}
         >
           {isRunning ? 'Running...' : 'Run Code'}
         </button>
@@ -155,8 +164,15 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             border: 'none',
             borderRadius: '4px',
             flex: '1 1 auto',
+            transition: 'background-color 0.3s',
           }}
           aria-label="Submit solution"
+          onMouseOver={(e) => {
+            if (!(!output || isSubmitted)) e.currentTarget.style.backgroundColor = '#218838';
+          }}
+          onMouseOut={(e) => {
+            if (!(!output || isSubmitted)) e.currentTarget.style.backgroundColor = '#28a745';
+          }}
         >
           Submit
         </button>
@@ -172,8 +188,15 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             border: 'none',
             borderRadius: '4px',
             flex: '1 1 auto',
+            transition: 'background-color 0.3s',
           }}
           aria-label={hintIndex < exercise.hints.length ? 'Show next hint' : 'Show solution'}
+          onMouseOver={(e) => {
+            if (!(hintIndex > exercise.hints.length)) e.currentTarget.style.backgroundColor = '#e0a800';
+          }}
+          onMouseOut={(e) => {
+            if (!(hintIndex > exercise.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
+          }}
         >
           {hintIndex < exercise.hints.length ? 'Show Hint' : 'Show Solution'}
         </button>
@@ -187,6 +210,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             backgroundColor: '#fff3cd',
             padding: '10px',
             borderRadius: '4px',
+            border: '1px solid #ffeeba',
           }}
         >
           <strong>Hints:</strong>
@@ -206,6 +230,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             backgroundColor: '#d1ecf1',
             padding: '10px',
             borderRadius: '4px',
+            border: '1px solid #bee5eb',
           }}
         >
           <strong>Solution Explanation:</strong>
@@ -226,6 +251,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             backgroundColor: '#e2e3e5',
             padding: '10px',
             borderRadius: '4px',
+            border: '1px solid #d6d8db',
           }}
         >
           <strong>Output:</strong>
@@ -241,6 +267,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             backgroundColor: '#f8d7da',
             padding: '10px',
             borderRadius: '4px',
+            border: '1px solid #f5c6cb',
           }}
         >
           <strong>Error:</strong> {error}
@@ -255,6 +282,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             backgroundColor: isCorrect ? '#d4edda' : '#f8d7da',
             padding: '10px',
             borderRadius: '4px',
+            border: isCorrect ? '1px solid #c3e6cb' : '1px solid #f5c6cb',
           }}
         >
           <h3 style={{ color: isCorrect ? '#155724' : '#721c24' }}>
@@ -270,6 +298,30 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
               <strong>Explanation:</strong> {exercise.solution_explanation}
             </p>
           )}
+        </div>
+      )}
+
+      {/* References */}
+      {exercise.references && exercise.references.length > 0 && (
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#e2e3e5',
+            padding: '10px',
+            borderRadius: '4px',
+            border: '1px solid #d6d8db',
+          }}
+        >
+          <strong>References:</strong>
+          <ul>
+            {exercise.references.map((reference, index) => (
+              <li key={index}>
+                <a href={reference} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>
+                  {reference}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
