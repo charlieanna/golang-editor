@@ -21,7 +21,7 @@ const API_BASE_URL = 'http://localhost:8080'; // Update if your backend runs on 
 
 export const fetchExercises = async (site, id) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/questions/${site}/${id}`);
+    const response = await axios.get(`${API_BASE_URL}/exercises/${site}/${id}`);
     return response.data.exercises; // Assuming the API returns an array of exercises
   } catch (error) {
     console.error('Error fetching exercises:', error);
