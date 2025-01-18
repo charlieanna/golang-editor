@@ -18,6 +18,7 @@ const QuestionDetail = () => {
       <h2>Exercises</h2>
       {isLoading && <p>Loading exercises...</p>}
       {error && <p>{error}</p>}
+      {exercises}
       {!isLoading && !error && exercises.length > 0 && (
         <ul>
           {exercises.map((exercise) => (

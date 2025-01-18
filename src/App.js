@@ -3,10 +3,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TextFetcher from './components/TextFetcher/TextFetcher';
-import QuestionsList from './components/QuestionsList.jsx';
 import Header from './components/Header.jsx'; // Optional: For navigation
-import QuestionDetail from './components/QuestionDetail.jsx';
-
+import ExerciseItem from './components/TextFetcher/ExerciseItem';
 const App = () => {
   return (
     <Router>
@@ -16,13 +14,10 @@ const App = () => {
         <Routes>
           
           {/* Route for the QuestionsList component */}
-          <Route path="/questions" element={<QuestionsList />} />
+          <Route path="/questions" element={<TextFetcher />} />
           
           {/* Question Detail route with site and question_id as URL parameters */}
-          <Route path="/questions/:site/:question_id" element={<TextFetcher />} />
-
-          {/* Question Detail route with site and question_id as URL parameters */}
-          <Route path="/exercises/:site/:question_id" element={<QuestionDetail />} />
+          <Route path="/exercises/:site/:question_id" element={<ExerciseItem />} />
 
           {/* Add more routes here if needed */}
         </Routes>

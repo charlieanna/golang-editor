@@ -6,6 +6,8 @@ import { executeCode } from '../../services/api';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
 import golang from 'react-syntax-highlighter/dist/esm/languages/hljs/go';
 import github from 'react-syntax-highlighter/dist/esm/styles/hljs/github';
+import { useParams } from 'react-router-dom';
+import useFetchExercises from '../../hooks/useFetchExercises';
 
 // Register the Go language for syntax highlighting
 SyntaxHighlighter.registerLanguage('go', golang);
@@ -15,30 +17,31 @@ SyntaxHighlighter.registerLanguage('go', golang);
  * Renders individual exercise details and handles user interactions.
  * @param {Object} props - Component props.
  */
-const ExerciseItem = ({ exercise, onCompletion }) => {
-  // State variables
-  const [code, setCode] = useState(exercise.code_template.trim());
+const ExerciseItem = () => {
+  const { site, question_id } = useParams(); // Extract 'site' and 'question_id' from the URL
+
+  // Use the custom hook with 'site' and 'question_id'
+  const { exercises, isLoading, error } = useFetchExercises(site, question_id);
+
+  // // State variables
+  const [code, setCode] = useState('');
+
+  useEffect(() => {
+    if (!isLoading && exercises && !error) {
+      console.log("useexercises", exercises);
+      setCode(exercises.codetemplate || '');
+    }
+  }, [isLoading, error, exercises]);
   const [output, setOutput] = useState('');
   const [hintIndex, setHintIndex] = useState(0); // Tracks the current hint to display
   const [displayedHints, setDisplayedHints] = useState([]); // Stores hints shown to the user
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
-  const [error, setError] = useState(null);
+  const [error1, setError] = useState(null);
   const [showSolution, setShowSolution] = useState(false); // Controls the display of the full solution
 
-  // Reset state when a new exercise is received
-  useEffect(() => {
-    setCode(exercise.code_template.trim());
-    setOutput('');
-    setHintIndex(0);
-    setDisplayedHints([]);
-    setIsSubmitted(false);
-    setIsCorrect(false);
-    setIsRunning(false);
-    setError(null);
-    setShowSolution(false);
-  }, [exercise]);
+  
 
   /**
    * Handles changes in the code editor.
@@ -66,23 +69,23 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
   };
 
   /**
-   * Handles the submission of the exercise.
+   * Handles the submission of the exercises.
    * Evaluates whether the output matches expected criteria.
    */
   const handleSubmit = () => {
     // Evaluate correctness
-    if (exercise.expectedOutput) {
-      const expected = exercise.expectedOutput.trim();
+    if (exercises.expectedOutput) {
+      const expected = exercises.expectedOutput.trim();
       const actual = output.trim();
       const correct = actual === expected;
       setIsCorrect(correct);
       setIsSubmitted(true);
-      onCompletion(correct);
+      // onCompletion(correct);
     } else {
       // If no expected output is provided, consider submission as correct
       setIsCorrect(true);
       setIsSubmitted(true);
-      onCompletion(true);
+      // onCompletion(true);
     }
   };
 
@@ -90,11 +93,11 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
    * Handles displaying the next hint or the full solution.
    */
   const handleShowHint = () => {
-    if (hintIndex < exercise.hints.length) {
+    if (hintIndex < exercises.hints.length) {
       // Show the next hint
-      setDisplayedHints([...displayedHints, exercise.hints[hintIndex]]);
+      setDisplayedHints([...displayedHints, exercises.hints[hintIndex]]);
       setHintIndex(hintIndex + 1);
-    } else if (hintIndex === exercise.hints.length) {
+    } else if (hintIndex === exercises.hints.length) {
       // All hints have been shown; now display the full solution
       setShowSolution(true);
     }
@@ -112,13 +115,13 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
       }}
     >
       <h2>
-        {exercise.difficulty} Level: {exercise.title}
+        {exercises.difficulty} Level: {exercises.title}
       </h2>
       <p>
-        <strong>Problem:</strong> {exercise.problem_statement}
+        <strong>Problem:</strong> {exercises.problem_statement}
       </p>
       <p>
-        <strong>Instructions:</strong> {exercise.instructions}
+        <strong>Instructions:</strong> {exercises.instructions}
       </p>
 
       {/* Code Editor */}
@@ -176,12 +179,12 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
         >
           Submit
         </button>
-        <button
+        {/* <button
           onClick={handleShowHint}
-          disabled={hintIndex > exercise.hints.length}
+          // disabled={hintIndex > exercises.hints.length}
           style={{
             padding: '8px 16px',
-            cursor: hintIndex > exercise.hints.length ? 'not-allowed' : 'pointer',
+            // cursor: hintIndex > exercises.hints.length ? 'not-allowed' : 'pointer',
             fontSize: '16px',
             backgroundColor: '#ffc107',
             color: '#212529',
@@ -190,16 +193,16 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
             flex: '1 1 auto',
             transition: 'background-color 0.3s',
           }}
-          aria-label={hintIndex < exercise.hints.length ? 'Show next hint' : 'Show solution'}
+          // aria-label={hintIndex < exercises.hints.length ? 'Show next hint' : 'Show solution'}
           onMouseOver={(e) => {
-            if (!(hintIndex > exercise.hints.length)) e.currentTarget.style.backgroundColor = '#e0a800';
+            if (!(hintIndex > exercises.hints.length)) e.currentTarget.style.backgroundColor = '#e0a800';
           }}
           onMouseOut={(e) => {
-            if (!(hintIndex > exercise.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
+            if (!(hintIndex > exercises.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
           }}
         >
-          {hintIndex < exercise.hints.length ? 'Show Hint' : 'Show Solution'}
-        </button>
+          {hintIndex < exercises.hints.length ? 'Show Hint' : 'Show Solution'}
+        </button> */}
       </div>
 
       {/* Hints */}
@@ -223,7 +226,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
       )}
 
       {/* Full Solution */}
-      {showSolution && exercise.solution_explanation && (
+      {showSolution && exercises.solution_explanation && (
         <div
           style={{
             marginTop: '20px',
@@ -234,11 +237,11 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
           }}
         >
           <strong>Solution Explanation:</strong>
-          <p>{exercise.solution_explanation}</p>
+          <p>{exercises.solution_explanation}</p>
           
           <strong>Solution Code:</strong>
           <SyntaxHighlighter language="go" style={github}>
-            {exercise.solution_code}
+            {exercises.solution_code}
           </SyntaxHighlighter>
         </div>
       )}
@@ -288,21 +291,21 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
           <h3 style={{ color: isCorrect ? '#155724' : '#721c24' }}>
             {isCorrect ? '✅ Correct!' : '❌ Incorrect.'}
           </h3>
-          {!isCorrect && exercise.expectedOutput && (
+          {!isCorrect && exercises.expectedOutput && (
             <p>
-              <strong>Expected Output:</strong> {exercise.expectedOutput}
+              <strong>Expected Output:</strong> {exercises.expectedOutput}
             </p>
           )}
-          {exercise.solution_explanation && (
+          {exercises.solution_explanation && (
             <p>
-              <strong>Explanation:</strong> {exercise.solution_explanation}
+              <strong>Explanation:</strong> {exercises.solution_explanation}
             </p>
           )}
         </div>
       )}
 
       {/* References */}
-      {exercise.references && exercise.references.length > 0 && (
+      {exercises.references && exercises.references.length > 0 && (
         <div
           style={{
             marginTop: '20px',
@@ -314,7 +317,7 @@ const ExerciseItem = ({ exercise, onCompletion }) => {
         >
           <strong>References:</strong>
           <ul>
-            {exercise.references.map((reference, index) => (
+            {exercises.references.map((reference, index) => (
               <li key={index}>
                 <a href={reference} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff' }}>
                   {reference}
