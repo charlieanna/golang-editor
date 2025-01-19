@@ -1,5 +1,3 @@
-// src/components/TextFetcher/ExerciseItem.js
-
 import React, { useState, useEffect } from 'react';
 import CodeEditorComponent from './CodeEditorComponent';
 import { executeCode } from '../../services/api';
@@ -15,33 +13,36 @@ SyntaxHighlighter.registerLanguage('go', golang);
 /**
  * ExerciseItem Component
  * Renders individual exercise details and handles user interactions.
- * @param {Object} props - Component props.
  */
 const ExerciseItem = () => {
   const { site, question_id } = useParams(); // Extract 'site' and 'question_id' from the URL
 
-  // Use the custom hook with 'site' and 'question_id'
+  // Use the custom hook to fetch exercises from your backend
   const { exercises, isLoading, error } = useFetchExercises(site, question_id);
 
-  // // State variables
+  // State variables
   const [code, setCode] = useState('');
-
-  useEffect(() => {
-    if (!isLoading && exercises && !error) {
-      console.log("useexercises", exercises);
-      setCode(exercises.codetemplate || '');
-    }
-  }, [isLoading, error, exercises]);
   const [output, setOutput] = useState('');
-  const [hintIndex, setHintIndex] = useState(0); // Tracks the current hint to display
-  const [displayedHints, setDisplayedHints] = useState([]); // Stores hints shown to the user
+  const [error1, setError] = useState(null);
+  const [isRunning, setIsRunning] = useState(false);
+
+  // For hints and solution
+  const [hintIndex, setHintIndex] = useState(0); 
+  const [displayedHints, setDisplayedHints] = useState([]);
+  const [showSolution, setShowSolution] = useState(false);
+
+  // Submission feedback
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [isRunning, setIsRunning] = useState(false);
-  const [error1, setError] = useState(null);
-  const [showSolution, setShowSolution] = useState(false); // Controls the display of the full solution
 
-  
+  useEffect(() => {
+    // Once data is loaded, set the initial code template
+    if (!isLoading && exercises && !error) {
+      console.log('useexercises:', exercises);
+      // If the backend returns "code_template", use that. Otherwise, fallback to an empty string.
+      setCode(exercises.code_template || '');
+    }
+  }, [isLoading, error, exercises]);
 
   /**
    * Handles changes in the code editor.
@@ -59,7 +60,7 @@ const ExerciseItem = () => {
     setError(null);
     setOutput('');
     try {
-      const response = await executeCode('golang', code);
+      const response = await executeCode('golang', code, site, question_id);
       setOutput(response.output || 'No output');
     } catch (err) {
       setError(err.response ? err.response.data.error : 'Error running the code');
@@ -69,36 +70,37 @@ const ExerciseItem = () => {
   };
 
   /**
-   * Handles the submission of the exercises.
-   * Evaluates whether the output matches expected criteria.
+   * Handles the submission of the exercise.
+   * Checks if the output matches the expected output.
    */
   const handleSubmit = () => {
-    // Evaluate correctness
-    if (exercises.expectedOutput) {
-      const expected = exercises.expectedOutput.trim();
+    // Evaluate correctness if an expectedOutput is provided
+    if (exercises.expected_output) {
+      const expected = exercises.expected_output.trim();
       const actual = output.trim();
-      const correct = actual === expected;
+      const correct = (actual === expected);
       setIsCorrect(correct);
       setIsSubmitted(true);
-      // onCompletion(correct);
     } else {
-      // If no expected output is provided, consider submission as correct
+      // If no expected output is provided, treat it as correct
       setIsCorrect(true);
       setIsSubmitted(true);
-      // onCompletion(true);
     }
   };
 
   /**
-   * Handles displaying the next hint or the full solution.
+   * Shows the next hint or the full solution if all hints have been shown.
    */
   const handleShowHint = () => {
+    // If there are no hints at all, do nothing
+    if (!exercises.hints) return;
+
     if (hintIndex < exercises.hints.length) {
       // Show the next hint
       setDisplayedHints([...displayedHints, exercises.hints[hintIndex]]);
       setHintIndex(hintIndex + 1);
-    } else if (hintIndex === exercises.hints.length) {
-      // All hints have been shown; now display the full solution
+    } else {
+      // No more hints; display the full solution
       setShowSolution(true);
     }
   };
@@ -115,13 +117,13 @@ const ExerciseItem = () => {
       }}
     >
       <h2>
-        {exercises.difficulty} Level: {exercises.title}
+        {exercises?.difficulty} Level: {exercises?.title}
       </h2>
       <p>
-        <strong>Problem:</strong> {exercises.problem_statement}
+        <strong>Problem:</strong> {exercises?.problem_statement}
       </p>
       <p>
-        <strong>Instructions:</strong> {exercises.instructions}
+        <strong>Instructions:</strong> {exercises?.instructions}
       </p>
 
       {/* Code Editor */}
@@ -129,7 +131,7 @@ const ExerciseItem = () => {
 
       <br />
 
-      {/* Buttons */}
+      {/* Buttons for running code and submitting */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button
           onClick={handleRunCode}
@@ -155,6 +157,7 @@ const ExerciseItem = () => {
         >
           {isRunning ? 'Running...' : 'Run Code'}
         </button>
+
         <button
           onClick={handleSubmit}
           disabled={!output || isSubmitted}
@@ -179,33 +182,51 @@ const ExerciseItem = () => {
         >
           Submit
         </button>
-        {/* <button
-          onClick={handleShowHint}
-          // disabled={hintIndex > exercises.hints.length}
-          style={{
-            padding: '8px 16px',
-            // cursor: hintIndex > exercises.hints.length ? 'not-allowed' : 'pointer',
-            fontSize: '16px',
-            backgroundColor: '#ffc107',
-            color: '#212529',
-            border: 'none',
-            borderRadius: '4px',
-            flex: '1 1 auto',
-            transition: 'background-color 0.3s',
-          }}
-          // aria-label={hintIndex < exercises.hints.length ? 'Show next hint' : 'Show solution'}
-          onMouseOver={(e) => {
-            if (!(hintIndex > exercises.hints.length)) e.currentTarget.style.backgroundColor = '#e0a800';
-          }}
-          onMouseOut={(e) => {
-            if (!(hintIndex > exercises.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
-          }}
-        >
-          {hintIndex < exercises.hints.length ? 'Show Hint' : 'Show Solution'}
-        </button> */}
+
+        {/* Show Hints / Show Solution Button */}
+        {exercises?.hints && exercises.hints.length > 0 && (
+          <button
+            onClick={handleShowHint}
+            disabled={hintIndex >= exercises.hints.length && showSolution}
+            style={{
+              padding: '8px 16px',
+              cursor: hintIndex >= exercises.hints.length && showSolution ? 'not-allowed' : 'pointer',
+              fontSize: '16px',
+              backgroundColor: '#ffc107',
+              color: '#212529',
+              border: 'none',
+              borderRadius: '4px',
+              flex: '1 1 auto',
+              transition: 'background-color 0.3s',
+            }}
+            aria-label={
+              hintIndex < exercises.hints.length
+                ? 'Show next hint'
+                : showSolution
+                ? 'Solution shown'
+                : 'Show solution'
+            }
+            onMouseOver={(e) => {
+              if (!(hintIndex >= exercises.hints.length && showSolution)) {
+                e.currentTarget.style.backgroundColor = '#e0a800';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!(hintIndex >= exercises.hints.length && showSolution)) {
+                e.currentTarget.style.backgroundColor = '#ffc107';
+              }
+            }}
+          >
+            {hintIndex < exercises.hints.length
+              ? 'Show Hint'
+              : showSolution
+              ? 'Solution Shown'
+              : 'Show Solution'}
+          </button>
+        )}
       </div>
 
-      {/* Hints */}
+      {/* Hints Section */}
       {displayedHints.length > 0 && (
         <div
           style={{
@@ -225,8 +246,8 @@ const ExerciseItem = () => {
         </div>
       )}
 
-      {/* Full Solution */}
-      {showSolution && exercises.solution_explanation && (
+      {/* Full Solution Section */}
+      {showSolution && exercises?.solution_explanation && (
         <div
           style={{
             marginTop: '20px',
@@ -238,15 +259,19 @@ const ExerciseItem = () => {
         >
           <strong>Solution Explanation:</strong>
           <p>{exercises.solution_explanation}</p>
-          
-          <strong>Solution Code:</strong>
-          <SyntaxHighlighter language="go" style={github}>
-            {exercises.solution_code}
-          </SyntaxHighlighter>
+
+          {exercises.solution_code && (
+            <>
+              <strong>Solution Code:</strong>
+              <SyntaxHighlighter language="go" style={github}>
+                {exercises.solution_code}
+              </SyntaxHighlighter>
+            </>
+          )}
         </div>
       )}
 
-      {/* Output */}
+      {/* Code Output */}
       {output && (
         <div
           style={{
@@ -263,7 +288,7 @@ const ExerciseItem = () => {
       )}
 
       {/* Error Handling */}
-      {error && (
+      {error1 && (
         <div
           style={{
             marginTop: '20px',
@@ -273,7 +298,7 @@ const ExerciseItem = () => {
             border: '1px solid #f5c6cb',
           }}
         >
-          <strong>Error:</strong> {error}
+          <strong>Error:</strong> {error1}
         </div>
       )}
 
@@ -291,9 +316,9 @@ const ExerciseItem = () => {
           <h3 style={{ color: isCorrect ? '#155724' : '#721c24' }}>
             {isCorrect ? '✅ Correct!' : '❌ Incorrect.'}
           </h3>
-          {!isCorrect && exercises.expectedOutput && (
+          {!isCorrect && exercises.expected_output && (
             <p>
-              <strong>Expected Output:</strong> {exercises.expectedOutput}
+              <strong>Expected Output:</strong> {exercises.expected_output}
             </p>
           )}
           {exercises.solution_explanation && (
@@ -305,7 +330,7 @@ const ExerciseItem = () => {
       )}
 
       {/* References */}
-      {exercises.references && exercises.references.length > 0 && (
+      {exercises?.references && exercises.references.length > 0 && (
         <div
           style={{
             marginTop: '20px',

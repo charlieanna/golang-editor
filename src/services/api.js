@@ -3,11 +3,13 @@
 import axios from 'axios';
 
 // Execute Code
-export const executeCode = async (language, code) => {
+export const executeCode = async (language, code, site, question_id) => {
   try {
     const response = await axios.post(`${API_BASE_URL}/execute`, {
       language,
       code,
+      site,
+      question_id,
     });
     return response.data;
   } catch (error) {
