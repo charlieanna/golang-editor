@@ -10,24 +10,18 @@ import useFetchExercises from '../../hooks/useFetchExercises';
 // Register the Go language for syntax highlighting
 SyntaxHighlighter.registerLanguage('go', golang);
 
-/**
- * ExerciseItem Component
- * Renders individual exercise details and handles user interactions.
- */
 const ExerciseItem = () => {
-  const { site, question_id } = useParams(); // Extract 'site' and 'question_id' from the URL
-
-  // Use the custom hook to fetch exercises from your backend
+  const { site, question_id } = useParams();
   const { exercises, isLoading, error } = useFetchExercises(site, question_id);
 
-  // State variables
+  // Editor / Output / Error
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [error1, setError] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  // For hints and solution
-  const [hintIndex, setHintIndex] = useState(0); 
+  // Hints + solution toggles
+  const [hintIndex, setHintIndex] = useState(0);
   const [displayedHints, setDisplayedHints] = useState([]);
   const [showSolution, setShowSolution] = useState(false);
 
@@ -35,26 +29,20 @@ const ExerciseItem = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // New toggles for showing test cases & solution
+  const [showTestCases, setShowTestCases] = useState(false);
+
   useEffect(() => {
-    // Once data is loaded, set the initial code template
     if (!isLoading && exercises && !error) {
       console.log('useexercises:', exercises);
-      // If the backend returns "code_template", use that. Otherwise, fallback to an empty string.
       setCode(exercises.code_template || '');
     }
   }, [isLoading, error, exercises]);
 
-  /**
-   * Handles changes in the code editor.
-   * @param {string} newCode - The updated code from the editor.
-   */
   const handleCodeChange = (newCode) => {
     setCode(newCode);
   };
 
-  /**
-   * Handles the execution of user-submitted code.
-   */
   const handleRunCode = async () => {
     setIsRunning(true);
     setError(null);
@@ -69,12 +57,7 @@ const ExerciseItem = () => {
     }
   };
 
-  /**
-   * Handles the submission of the exercise.
-   * Checks if the output matches the expected output.
-   */
   const handleSubmit = () => {
-    // Evaluate correctness if an expectedOutput is provided
     if (exercises.expected_output) {
       const expected = exercises.expected_output.trim();
       const actual = output.trim();
@@ -82,27 +65,30 @@ const ExerciseItem = () => {
       setIsCorrect(correct);
       setIsSubmitted(true);
     } else {
-      // If no expected output is provided, treat it as correct
+      // If there's no expected output, treat it as correct
       setIsCorrect(true);
       setIsSubmitted(true);
     }
   };
 
-  /**
-   * Shows the next hint or the full solution if all hints have been shown.
-   */
   const handleShowHint = () => {
-    // If there are no hints at all, do nothing
     if (!exercises.hints) return;
 
     if (hintIndex < exercises.hints.length) {
-      // Show the next hint
       setDisplayedHints([...displayedHints, exercises.hints[hintIndex]]);
       setHintIndex(hintIndex + 1);
     } else {
-      // No more hints; display the full solution
-      setShowSolution(true);
+      // If we've shown all hints, you could also show the solution automatically here
+      // setShowSolution(true);
     }
+  };
+
+  const handleToggleTestCases = () => {
+    setShowTestCases(!showTestCases);
+  };
+
+  const handleToggleSolution = () => {
+    setShowSolution(!showSolution);
   };
 
   return (
@@ -116,23 +102,19 @@ const ExerciseItem = () => {
         backgroundColor: '#fff',
       }}
     >
-      <h2>
-        {exercises?.difficulty} Level: {exercises?.title}
-      </h2>
-      <p>
-        <strong>Problem:</strong> {exercises?.problem_statement}
-      </p>
-      <p>
-        <strong>Instructions:</strong> {exercises?.instructions}
-      </p>
+      <h2>{exercises?.difficulty} Level: {exercises?.title}</h2>
+      <p><strong>Problem:</strong> {exercises?.problem_statement}</p>
+      <p><strong>Instructions:</strong> {exercises?.instructions}</p>
 
       {/* Code Editor */}
       <CodeEditorComponent code={code} onChange={handleCodeChange} />
 
       <br />
 
-      {/* Buttons for running code and submitting */}
+      {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+        
+        {/* Run Code */}
         <button
           onClick={handleRunCode}
           disabled={isRunning}
@@ -158,6 +140,7 @@ const ExerciseItem = () => {
           {isRunning ? 'Running...' : 'Run Code'}
         </button>
 
+        {/* Submit Code */}
         <button
           onClick={handleSubmit}
           disabled={!output || isSubmitted}
@@ -183,14 +166,14 @@ const ExerciseItem = () => {
           Submit
         </button>
 
-        {/* Show Hints / Show Solution Button */}
+        {/* Show Hints */}
         {exercises?.hints && exercises.hints.length > 0 && (
           <button
             onClick={handleShowHint}
-            disabled={hintIndex >= exercises.hints.length && showSolution}
+            disabled={hintIndex >= exercises.hints.length}
             style={{
               padding: '8px 16px',
-              cursor: hintIndex >= exercises.hints.length && showSolution ? 'not-allowed' : 'pointer',
+              cursor: hintIndex >= exercises.hints.length ? 'not-allowed' : 'pointer',
               fontSize: '16px',
               backgroundColor: '#ffc107',
               color: '#212529',
@@ -199,29 +182,67 @@ const ExerciseItem = () => {
               flex: '1 1 auto',
               transition: 'background-color 0.3s',
             }}
-            aria-label={
-              hintIndex < exercises.hints.length
-                ? 'Show next hint'
-                : showSolution
-                ? 'Solution shown'
-                : 'Show solution'
-            }
+            aria-label="Show next hint"
             onMouseOver={(e) => {
-              if (!(hintIndex >= exercises.hints.length && showSolution)) {
-                e.currentTarget.style.backgroundColor = '#e0a800';
-              }
+              if (!(hintIndex >= exercises.hints.length)) e.currentTarget.style.backgroundColor = '#e0a800';
             }}
             onMouseOut={(e) => {
-              if (!(hintIndex >= exercises.hints.length && showSolution)) {
-                e.currentTarget.style.backgroundColor = '#ffc107';
-              }
+              if (!(hintIndex >= exercises.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
             }}
           >
-            {hintIndex < exercises.hints.length
-              ? 'Show Hint'
-              : showSolution
-              ? 'Solution Shown'
-              : 'Show Solution'}
+            {hintIndex < exercises.hints.length ? 'Show Hint' : 'All hints shown'}
+          </button>
+        )}
+
+        {/* Show/Hide Test Cases */}
+        {exercises?.test_cases && exercises.test_cases.length > 0 && (
+          <button
+            onClick={handleToggleTestCases}
+            style={{
+              padding: '8px 16px',
+              fontSize: '16px',
+              backgroundColor: '#007bff',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              flex: '1 1 auto',
+              transition: 'background-color 0.3s',
+            }}
+            aria-label="Show or hide test cases"
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#0056b3';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#007bff';
+            }}
+          >
+            {showTestCases ? 'Hide Test Cases' : 'Show Test Cases'}
+          </button>
+        )}
+
+        {/* Show/Hide Solution */}
+        {exercises?.solution_explanation && exercises?.solution_code && (
+          <button
+            onClick={handleToggleSolution}
+            style={{
+              padding: '8px 16px',
+              fontSize: '16px',
+              backgroundColor: '#6c757d',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              flex: '1 1 auto',
+              transition: 'background-color 0.3s',
+            }}
+            aria-label="Show or hide solution"
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#5a6268';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#6c757d';
+            }}
+          >
+            {showSolution ? 'Hide Solution' : 'Show Solution'}
           </button>
         )}
       </div>
@@ -241,6 +262,29 @@ const ExerciseItem = () => {
           <ul>
             {displayedHints.map((hint, index) => (
               <li key={index}>{hint}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Test Cases Section */}
+      {showTestCases && exercises?.test_cases && exercises.test_cases.length > 0 && (
+        <div
+          style={{
+            marginTop: '20px',
+            backgroundColor: '#f2f2f2',
+            padding: '10px',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+          }}
+        >
+          <strong>Test Cases:</strong>
+          <ul>
+            {exercises.test_cases.map((tc, index) => (
+              <li key={index}>
+                <strong>Input:</strong> {JSON.stringify(tc.input)} |{" "}
+                <strong>Expected Output:</strong> {JSON.stringify(tc.expected_output)}
+              </li>
             ))}
           </ul>
         </div>
