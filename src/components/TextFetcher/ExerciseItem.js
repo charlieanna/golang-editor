@@ -20,6 +20,11 @@ const ExerciseItem = () => {
   const [error1, setError] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
+  // A new piece of state to track overall test status
+  // Could be "unknown", "allPassed", or "someFailed"
+  const [testStatus, setTestStatus] = useState('unknown');
+
+
   // Hints + solution toggles
   const [hintIndex, setHintIndex] = useState(0);
   const [displayedHints, setDisplayedHints] = useState([]);
@@ -48,7 +53,25 @@ const ExerciseItem = () => {
     setOutput('');
     try {
       const response = await executeCode('golang', code, site, question_id);
-      setOutput(response.output || 'No output');
+      const logOutput = response.output || 'No output';
+      // Display full container logs
+      setOutput(logOutput);
+
+      // Here we parse the logs. Suppose each test line includes the word "passed" or "failed"
+      const lines = logOutput.split('\n');
+      let anyFailed = false;
+ 
+      for (const line of lines) {
+        if (line.toLowerCase().includes('Fail')) {
+          anyFailed = true;
+          break;
+        }
+      }
+      if (anyFailed) {
+        setTestStatus('someFailed');
+      } else {
+        setTestStatus('allPassed');
+      }
     } catch (err) {
       setError(err.response ? err.response.data.error : 'Error running the code');
     } finally {
@@ -393,6 +416,26 @@ const ExerciseItem = () => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Show overall test status */}
+      {testStatus === 'allPassed' && (
+        <div style={{ color: 'green', marginTop: '10px' }}>
+          All tests passed! ✅
+        </div>
+      )}
+      {testStatus === 'someFailed' && (
+        <div style={{ color: 'red', marginTop: '10px' }}>
+          At least one test failed. ❌
+        </div>
+      )}
+      {/* (testStatus = 'unknown' means we haven't run or are in progress) */}
+
+      {/* Error Handling */}
+      {error1 && (
+        <div style={{ marginTop: '20px', color: 'red' }}>
+          <strong>Error:</strong> {error1}
         </div>
       )}
     </div>
