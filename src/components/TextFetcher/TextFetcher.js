@@ -21,7 +21,6 @@ const TextFetcher = () => {
       const fetchQuestions = async () => {
           try {
             const response = await axios.get(`${API_BASE_URL}/questions`); // Adjust the path as needed
-              console.log(response.data.questions);
               setQuestions(response.data.questions);
               setLoading(false);
           } catch (err) {
@@ -38,7 +37,7 @@ const TextFetcher = () => {
   return (
          <div className="questions-list">
              <h2>All Fetched Questions</h2>
-             {questions.length === 0 ? (
+             {!questions || questions.length === 0 ? (
                  <p>No questions available.</p>
              ) : (
                  <ul>

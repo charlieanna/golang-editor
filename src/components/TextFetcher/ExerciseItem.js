@@ -34,7 +34,6 @@ const ExerciseItem = () => {
 
   useEffect(() => {
     if (!isLoading && exercises && !error) {
-      console.log('useexercises:', exercises);
       setCode(exercises.code_template || '');
     }
   }, [isLoading, error, exercises]);
