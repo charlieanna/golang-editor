@@ -44,7 +44,7 @@ const TextFetcher = () => {
                      {questions.map((question) => (
                          <li key={question.question_id}>
                              <h3>
-                                 <Link to={`/exercises/${question.site}/${question.question}`}>{question.question}</Link>
+                                 <Link to={`/exercises/${question.site}/${question.question_id}`}>{question.question}</Link>
                              </h3>
                              <p>{question.content}</p>
                              {/* Add more fields as necessary */}
