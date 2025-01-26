@@ -62,7 +62,7 @@ const ExerciseItem = () => {
       let anyFailed = false;
  
       for (const line of lines) {
-        if (line.toLowerCase().includes('Fail')) {
+        if (line.toLowerCase().includes('fail')) { // Changed 'Fail' to 'fail' for consistency
           anyFailed = true;
           break;
         }
@@ -101,6 +101,7 @@ const ExerciseItem = () => {
       setHintIndex(hintIndex + 1);
     } else {
       // If we've shown all hints, you could also show the solution automatically here
+      // Uncomment the next line if you prefer auto-showing the solution
       // setShowSolution(true);
     }
   };
@@ -212,7 +213,7 @@ const ExerciseItem = () => {
               if (!(hintIndex >= exercises.hints.length)) e.currentTarget.style.backgroundColor = '#ffc107';
             }}
           >
-            {hintIndex < exercises.hints.length ? 'Show Hint' : 'All hints shown'}
+            {hintIndex < exercises.hints.length ? 'Show Hint' : 'Solution'}
           </button>
         )}
 
@@ -242,30 +243,32 @@ const ExerciseItem = () => {
           </button>
         )}
 
-        {/* Show/Hide Solution */}
+        {/* Show/Hide Solution - Only after all hints have been shown */}
         {exercises?.solution_explanation && exercises?.solution_code && (
-          <button
-            onClick={handleToggleSolution}
-            style={{
-              padding: '8px 16px',
-              fontSize: '16px',
-              backgroundColor: '#6c757d',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              flex: '1 1 auto',
-              transition: 'background-color 0.3s',
-            }}
-            aria-label="Show or hide solution"
-            onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#5a6268';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#6c757d';
-            }}
-          >
-            {showSolution ? 'Hide Solution' : 'Show Solution'}
-          </button>
+          (!exercises.hints || hintIndex >= exercises.hints.length) && (
+            <button
+              onClick={handleToggleSolution}
+              style={{
+                padding: '8px 16px',
+                fontSize: '16px',
+                backgroundColor: '#6c757d',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                flex: '1 1 auto',
+                transition: 'background-color 0.3s',
+              }}
+              aria-label="Show or hide solution"
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#5a6268';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#6c757d';
+              }}
+            >
+              {showSolution ? 'Hide Solution' : 'Show Solution'}
+            </button>
+          )
         )}
       </div>
 
